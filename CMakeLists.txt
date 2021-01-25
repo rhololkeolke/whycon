@@ -2,7 +2,10 @@ cmake_minimum_required(VERSION 2.8.3)
 project(whycon_ros)
 include(FindPkgConfig)
 
-find_package(catkin REQUIRED COMPONENTS
+set(USE_ROS TRUE CACHE BOOL "Compile and install for ROS.")
+
+if(USE_ROS)
+  find_package(catkin REQUIRED COMPONENTS
     image_transport
     roscpp
     std_msgs
@@ -12,59 +15,70 @@ find_package(catkin REQUIRED COMPONENTS
     cv_bridge
     tf
     )
+endif()
 
 pkg_check_modules(Magick REQUIRED Magick++)
 
 find_package(OpenCV REQUIRED)
 
-generate_dynamic_reconfigure_options(cfg/whycon.cfg)
+if(USE_ROS)
+  generate_dynamic_reconfigure_options(cfg/whycon.cfg)
+endif()
 
-set(CMAKE_CXX_FLAGS "-std=c++11 -O2 -march=native -ggdb")
+set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-## Uncomment this if the package has a setup.py. This macro ensures
-## modules and global scripts declared therein get installed
-## See http://ros.org/doc/api/catkin/html/user_guide/setup_dot_py.html
-# catkin_python_setup()
+set(CMAKE_CXX_FLAGS "-O2 -march=native -ggdb")
 
-#######################################
-## Declare ROS messages and services ##
-#######################################
+if(USE_ROS)
+  ## Uncomment this if the package has a setup.py. This macro ensures
+  ## modules and global scripts declared therein get installed
+  ## See http://ros.org/doc/api/catkin/html/user_guide/setup_dot_py.html
+  # catkin_python_setup()
 
-## Generate messages in the 'msg' folder
-add_message_files(DIRECTORY msg
-    FILES
-    Marker.msg
-    MarkerArray.msg
-    )
+  #######################################
+  ## Declare ROS messages and services ##
+  #######################################
 
-# Generate services in the 'srv' folder
-# add_service_files(
-#  FILES
-# Charging.srv
-#)
+  ## Generate messages in the 'msg' folder
+  add_message_files(DIRECTORY msg
+      FILES
+      Marker.msg
+      MarkerArray.msg
+      )
 
-## Generate added messages and services with any dependencies listed here
-generate_messages(
-    DEPENDENCIES
-    std_msgs 
-    geometry_msgs 
-    )
+  # Generate services in the 'srv' folder
+  # add_service_files(
+  #  FILES
+  # Charging.srv
+  #)
 
-###################################
-## catkin specific configuration ##
-###################################
-## The catkin_package macro generates cmake config files for your package
-## Declare things to be passed to dependent projects
-## LIBRARIES: libraries you create in this project that dependent projects also need
-## CATKIN_DEPENDS: catkin_packages dependent projects also need
-## DEPENDS: system dependencies of this project that dependent projects also need
-catkin_package(
-    #  INCLUDE_DIRS include
-    #  LIBRARIES charging
-    #  CATKIN_DEPENDS image_transport roscpp rospy std_msgs
-    CATKIN_DEPENDS message_runtime std_msgs geometry_msgs dynamic_reconfigure
-    #  DEPENDS system_lib
-    )
+  ## Generate added messages and services with any dependencies listed here
+  generate_messages(
+      DEPENDENCIES
+      std_msgs
+      geometry_msgs
+      )
+
+  ###################################
+  ## catkin specific configuration ##
+  ###################################
+  ## The catkin_package macro generates cmake config files for your package
+  ## Declare things to be passed to dependent projects
+  ## LIBRARIES: libraries you create in this project that dependent projects also need
+  ## CATKIN_DEPENDS: catkin_packages dependent projects also need
+  ## DEPENDS: system dependencies of this project that dependent projects also need
+  catkin_package(
+      #  INCLUDE_DIRS include
+      #  LIBRARIES charging
+      #  CATKIN_DEPENDS image_transport roscpp rospy std_msgs
+      CATKIN_DEPENDS message_runtime std_msgs geometry_msgs dynamic_reconfigure
+      #  DEPENDS system_lib
+      )
+else()
+  set(catkin_INCLUDE_DIRS "")
+  set(catkin_LIBRARIES "")
+endif()
 
 ###########
 ## Build ##
@@ -107,82 +121,85 @@ target_link_libraries(whycon_gui
 add_executable(whycon_id_generator 
     id/CNecklace.cpp
     id/whycon_id_gen.cpp)
-add_dependencies(whycon_id_generator
-    ${catkin_EXPORTED_TARGETS}
-    ${${PROJECT_NAME}_EXPORTED_TARGETS}
-    )
+if(USE_ROS)
+  add_dependencies(whycon_id_generator
+      ${catkin_EXPORTED_TARGETS}
+      ${${PROJECT_NAME}_EXPORTED_TARGETS}
+      )
+endif()
 
 target_link_libraries(whycon_id_generator
     ${Magick_LIBRARIES}
 )
 
 
-add_executable(whycon_ros src/CWhycon.cpp)
+if(USE_ROS)
+  add_executable(whycon_ros src/CWhycon.cpp)
 
-add_dependencies(whycon_ros
-    ${catkin_EXPORTED_TARGETS}
-    ${${PROJECT_NAME}_EXPORTED_TARGETS}
-    ${PROJECT_NAME}_gencfg
-    )
+  add_dependencies(whycon_ros
+      ${catkin_EXPORTED_TARGETS}
+      ${${PROJECT_NAME}_EXPORTED_TARGETS}
+      ${PROJECT_NAME}_gencfg
+      )
 
-target_link_libraries(whycon_ros
-    whycon_timer
-    whycon_image
-    whycon_detector
-    whycon_transform
-    whycon_gui
-    whycon_necklace
-    SDL
-    ${catkin_LIBRARIES}
-    ${OpenCV_LIBRARIES}
-    )
+  target_link_libraries(whycon_ros
+      whycon_timer
+      whycon_image
+      whycon_detector
+      whycon_transform
+      whycon_gui
+      whycon_necklace
+      SDL
+      ${catkin_LIBRARIES}
+      ${OpenCV_LIBRARIES}
+      )
 
-#############
-## Install ##
-#############
+  #############
+  ## Install ##
+  #############
 
-install(TARGETS
-    whycon_detector
-    whycon_image
-    whycon_timer
-    whycon_sysmath
-    whycon_transform
-    whycon_necklace
-    whycon_gui
-    whycon_ros
-    whycon_id_generator
-    ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-    LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-    RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-    )
+  install(TARGETS
+      whycon_detector
+      whycon_image
+      whycon_timer
+      whycon_sysmath
+      whycon_transform
+      whycon_necklace
+      whycon_gui
+      whycon_ros
+      whycon_id_generator
+      ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+      LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+      RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+      )
 
-install(DIRECTORY include/${PROJECT_NAME}/
-    DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
-    FILES_MATCHING PATTERN "*.h"
-    )
+  install(DIRECTORY include/${PROJECT_NAME}/
+      DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
+      FILES_MATCHING PATTERN "*.h"
+      )
 
-install(DIRECTORY launch/
-    DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch
-    )
+  install(DIRECTORY launch/
+      DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch
+      )
 
-install(DIRECTORY etc/
-    DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/etc
-    )
+  install(DIRECTORY etc/
+      DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/etc
+      )
 
-install(DIRECTORY id/
-    DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/id
-    )
+  install(DIRECTORY id/
+      DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/id
+      )
 
-#############
-## Testing ##
-#############
+  #############
+  ## Testing ##
+  #############
 
-## Add gtest based cpp test target and link libraries
-# catkin_add_gtest(${PROJECT_NAME}-test test/test_charging.cpp)
-# if(TARGET ${PROJECT_NAME}-test)
-#   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
-# endif()
+  ## Add gtest based cpp test target and link libraries
+  # catkin_add_gtest(${PROJECT_NAME}-test test/test_charging.cpp)
+  # if(TARGET ${PROJECT_NAME}-test)
+  #   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
+  # endif()
 
-## Add folders to be run by python nosetests
-# catkin_add_nosetests(test)
-
+  ## Add folders to be run by python nosetests
+  # catkin_add_nosetests(test)
+endif()
