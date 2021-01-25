@@ -39,7 +39,7 @@ void display_help()
 // Draw the original WhyCon marker
 void draw_whycon_marker(Image &image)
 {
-    list<Drawable> drawList;
+    vector<Drawable> drawList;
     image.size("1800x1800");
     image.backgroundColor(Color("white"));
     image.erase();
@@ -69,8 +69,8 @@ void draw_whycon_marker(Image &image)
 // Draw the encded ID into WhyCon marker
 void draw_whycode_markers(int id, int idx, const int teethCount)
 {
-    list<Drawable> drawList;
-    list<Coordinate> coordsList;
+    vector<Drawable> drawList;
+    vector<Coordinate> coordsList;
 
     if(verbose) printf("Generating WhyCode Canvas for Id %d (encoding %d)\n", idx, id);
     Image image = whycode_sceleton;
@@ -92,7 +92,7 @@ void draw_whycode_markers(int id, int idx, const int teethCount)
         x2 = xc + 650 * cos(-w * (2 * i + 1) / 180.0 * M_PI);
         y2 = yc + 650 * sin(-w * (2 * i + 1) / 180.0 * M_PI);
 
-        list<Coordinate> coordsList;
+        vector<Coordinate> coordsList;
         coordsList.push_back(Coordinate(xc, yc));
         coordsList.push_back(Coordinate(x1, y1));
         coordsList.push_back(Coordinate(x2, y2));
@@ -128,7 +128,7 @@ void draw_whycode_markers(int id, int idx, const int teethCount)
 
 void draw_a4_grid_canvas(Image &image)
 {
-    list<Drawable> drawList;
+    vector<Drawable> drawList;
     xc = 485;
     yc = 1550;
     image.size("2970x2100");
@@ -179,8 +179,8 @@ void draw_box_markers(int id, int idx, const int teethCount)
     verbose = true;
     xc = 485;
     yc = 1550;
-    list<Drawable> drawList;
-    list<Coordinate> coordsList;
+    vector<Drawable> drawList;
+    vector<Coordinate> coordsList;
     Image image = a4_grid_canvas;
 
     for (int n = 485; n < 2970; n += 1000){
